@@ -1,0 +1,34 @@
+{
+  "name": "gcwebclient-libraries",
+  "version": "0.0.0",
+  "homepage": "https://github.com/opentable/gcwebclient-libraries",
+  "authors": [
+    "Agustin Colchado <Agustin@Colchado.com>"
+  ],
+  "description": "Collection of bower libraries versioned for consumption by gc components and microsites",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4",
+    "lodash": "~3.9.3",
+    "angular": "1.3.15",
+    "angular-route": "1.3.15",
+    "angular-cookies": "1.3.15",
+    "angular-loader": "1.3.15",
+    "angular-resource": "1.3.15",
+    "angular-sanitize": "1.3.15",
+    "angular-animate": "1.3.15",
+    "angular-mocks": "1.3.15",
+    "angular-i18n": "1.3.15",
+    "angular-touch": "1.3.15",
+    "modernizr": "~2.8.3",
+    "moment": "~2.10.3",
+    "moment-timezone": "~0.4.0"
+  }
+}
