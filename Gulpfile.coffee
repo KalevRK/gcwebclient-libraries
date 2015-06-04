@@ -28,3 +28,5 @@ gulp.task "clean", (cb)->
   del cleanPaths, cb
 
 gulp.task "default", ["build"]
+
+gulp.task "build", ["clean"]
