@@ -1,0 +1,17 @@
+{
+  "name": "gcwebclient-libraries",
+  "version": "0.0.0",
+  "homepage": "https://github.com/opentable/gcwebclient-libraries",
+  "authors": [
+    "Agustin Colchado <Agustin@Colchado.com>"
+  ],
+  "description": "Collection of bower libraries versioned for consumption by gc components and microsites",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

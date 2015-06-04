@@ -1,0 +1,19 @@
+{
+  "name": "gcwebclient-libraries",
+  "version": "0.0.0",
+  "description": "Collection of bower libraries versioned for consumption by gc components and microsites",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha ./test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/opentable/gcwebclient-libraries.git"
+  },
+  "author": "Agustin Colchado <agustin@colchado.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/opentable/gcwebclient-libraries/issues"
+  },
+  "homepage": "https://github.com/opentable/gcwebclient-libraries"
+}
