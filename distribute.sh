@@ -37,6 +37,7 @@ function updateRelease {
   showStatus "Updating files..."
   rm -rf release-tmp/*
   cp -r dist/ release-tmp/
+  cp bower.json release-tmp/
 }
 
 function exitIfError {
