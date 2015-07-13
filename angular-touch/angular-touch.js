@@ -1,21 +1,22 @@
 /**
- * @license AngularJS v1.3.15
+ * @license AngularJS v1.2.4
  * (c) 2010-2014 Google, Inc. http://angularjs.org
  * License: MIT
  */
 (function(window, angular, undefined) {'use strict';
 
 /**
- * @ngdoc module
+ * @ngdoc overview
  * @name ngTouch
  * @description
  *
  * # ngTouch
  *
  * The `ngTouch` module provides touch events and other helpers for touch-enabled devices.
- * The implementation is based on jQuery Mobile touch event handling
+ * The implementation is based on jQuery Mobile touch event handling 
  * ([jquerymobile.com](http://jquerymobile.com/)).
  *
+ * {@installModule touch}
  *
  * See {@link ngTouch.$swipe `$swipe`} for usage.
  *
@@ -30,8 +31,8 @@ var ngTouch = angular.module('ngTouch', []);
 /* global ngTouch: false */
 
     /**
-     * @ngdoc service
-     * @name $swipe
+     * @ngdoc object
+     * @name ngTouch.$swipe
      *
      * @description
      * The `$swipe` service is a service that abstracts the messier details of hold-and-drag swipe
@@ -52,20 +53,6 @@ ngTouch.factory('$swipe', [function() {
   // The total distance in any direction before we make the call on swipe vs. scroll.
   var MOVE_BUFFER_RADIUS = 10;
 
-  var POINTER_EVENTS = {
-    'mouse': {
-      start: 'mousedown',
-      move: 'mousemove',
-      end: 'mouseup'
-    },
-    'touch': {
-      start: 'touchstart',
-      move: 'touchmove',
-      end: 'touchend',
-      cancel: 'touchcancel'
-    }
-  };
-
   function getCoordinates(event) {
     var touches = event.touches && event.touches.length ? event.touches : [event];
     var e = (event.changedTouches && event.changedTouches[0]) ||
@@ -79,28 +66,15 @@ ngTouch.factory('$swipe', [function() {
     };
   }
 
-  function getEvents(pointerTypes, eventType) {
-    var res = [];
-    angular.forEach(pointerTypes, function(pointerType) {
-      var eventName = POINTER_EVENTS[pointerType][eventType];
-      if (eventName) {
-        res.push(eventName);
-      }
-    });
-    return res.join(' ');
-  }
-
   return {
     /**
      * @ngdoc method
-     * @name $swipe#bind
+     * @name ngTouch.$swipe#bind
+     * @methodOf ngTouch.$swipe
      *
      * @description
      * The main method of `$swipe`. It takes an element to be watched for swipe motions, and an
      * object containing event handlers.
-     * The pointer types that should be used can be specified via the optional
-     * third argument, which is an array of strings `'mouse'` and `'touch'`. By default,
-     * `$swipe` will listen for `mouse` and `touch` events.
      *
      * The four events are `start`, `move`, `end`, and `cancel`. `start`, `move`, and `end`
      * receive as a parameter a coordinates object of the form `{ x: 150, y: 310 }`.
@@ -123,7 +97,7 @@ ngTouch.factory('$swipe', [function() {
      * as described above.
      *
      */
-    bind: function(element, eventHandlers, pointerTypes) {
+    bind: function(element, eventHandlers) {
       // Absolute total movement, used to control swipe vs. scroll.
       var totalX, totalY;
       // Coordinates of the start position.
@@ -133,8 +107,7 @@ ngTouch.factory('$swipe', [function() {
       // Whether a swipe is active.
       var active = false;
 
-      pointerTypes = pointerTypes || ['mouse', 'touch'];
-      element.on(getEvents(pointerTypes, 'start'), function(event) {
+      element.on('touchstart mousedown', function(event) {
         startCoords = getCoordinates(event);
         active = true;
         totalX = 0;
@@ -142,15 +115,13 @@ ngTouch.factory('$swipe', [function() {
         lastPos = startCoords;
         eventHandlers['start'] && eventHandlers['start'](startCoords, event);
       });
-      var events = getEvents(pointerTypes, 'cancel');
-      if (events) {
-        element.on(events, function(event) {
-          active = false;
-          eventHandlers['cancel'] && eventHandlers['cancel'](event);
-        });
-      }
 
-      element.on(getEvents(pointerTypes, 'move'), function(event) {
+      element.on('touchcancel', function(event) {
+        active = false;
+        eventHandlers['cancel'] && eventHandlers['cancel'](event);
+      });
+
+      element.on('touchmove mousemove', function(event) {
         if (!active) return;
 
         // Android will send a touchcancel if it thinks we're starting to scroll.
@@ -184,7 +155,7 @@ ngTouch.factory('$swipe', [function() {
         }
       });
 
-      element.on(getEvents(pointerTypes, 'end'), function(event) {
+      element.on('touchend mouseup', function(event) {
         if (!active) return;
         active = false;
         eventHandlers['end'] && eventHandlers['end'](getCoordinates(event), event);
@@ -197,7 +168,7 @@ ngTouch.factory('$swipe', [function() {
 
 /**
  * @ngdoc directive
- * @name ngClick
+ * @name ngTouch.directive:ngClick
  *
  * @description
  * A more powerful replacement for the default ngClick designed to be used on touchscreen
@@ -218,17 +189,14 @@ ngTouch.factory('$swipe', [function() {
  * upon tap. (Event object is available as `$event`)
  *
  * @example
-    <example module="ngClickExample" deps="angular-touch.js">
-      <file name="index.html">
+    <doc:example>
+      <doc:source>
         <button ng-click="count = count + 1" ng-init="count=0">
           Increment
         </button>
         count: {{ count }}
-      </file>
-      <file name="script.js">
-        angular.module('ngClickExample', ['ngTouch']);
-      </file>
-    </example>
+      </doc:source>
+    </doc:example>
  */
 
 ngTouch.config(['$provide', function($provide) {
@@ -249,7 +217,6 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
   var ACTIVE_CLASS_NAME = 'ng-click-active';
   var lastPreventedTime;
   var touchCoordinates;
-  var lastLabelClickCoordinates;
 
 
   // TAP EVENTS AND GHOST CLICKS
@@ -264,7 +231,7 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
   //
   // What happens when the browser then generates a click event?
   // The browser, of course, also detects the tap and fires a click after a delay. This results in
-  // tapping/clicking twice. We do "clickbusting" to prevent it.
+  // tapping/clicking twice. So we do "clickbusting" to prevent it.
   //
   // How does it work?
   // We attach global touchstart and click handlers, that run during the capture (early) phase.
@@ -287,9 +254,9 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
   // encapsulates this ugly logic away from the user.
   //
   // Why not just put click handlers on the element?
-  // We do that too, just to be sure. If the tap event caused the DOM to change,
-  // it is possible another element is now in that position. To take account for these possibly
-  // distinct elements, the handlers are global and care only about coordinates.
+  // We do that too, just to be sure. The problem is that the tap event might have caused the DOM
+  // to change, so that the click fires in the same position but something else is there now. So
+  // the handlers are global and care only about coordinates and not elements.
 
   // Checks if the coordinates are close enough to be within the region.
   function hit(x1, y1, x2, y2) {
@@ -301,7 +268,7 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
   // Splices out the allowable region from the list after it has been used.
   function checkAllowableRegions(touchCoordinates, x, y) {
     for (var i = 0; i < touchCoordinates.length; i += 2) {
-      if (hit(touchCoordinates[i], touchCoordinates[i + 1], x, y)) {
+      if (hit(touchCoordinates[i], touchCoordinates[i+1], x, y)) {
         touchCoordinates.splice(i, i + 2);
         return true; // allowable region
       }
@@ -321,22 +288,9 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
     var y = touches[0].clientY;
     // Work around desktop Webkit quirk where clicking a label will fire two clicks (on the label
     // and on the input element). Depending on the exact browser, this second click we don't want
-    // to bust has either (0,0), negative coordinates, or coordinates equal to triggering label
-    // click event
+    // to bust has either (0,0) or negative coordinates.
     if (x < 1 && y < 1) {
       return; // offscreen
-    }
-    if (lastLabelClickCoordinates &&
-        lastLabelClickCoordinates[0] === x && lastLabelClickCoordinates[1] === y) {
-      return; // input click triggered by label click
-    }
-    // reset label click coordinates on first subsequent click
-    if (lastLabelClickCoordinates) {
-      lastLabelClickCoordinates = null;
-    }
-    // remember label click coordinates to prevent click busting of trigger click event on input
-    if (event.target.tagName.toLowerCase() === 'label') {
-      lastLabelClickCoordinates = [x, y];
     }
 
     // Look for an allowable region containing this click.
@@ -366,7 +320,7 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
     $timeout(function() {
       // Remove the allowable region.
       for (var i = 0; i < touchCoordinates.length; i += 2) {
-        if (touchCoordinates[i] == x && touchCoordinates[i + 1] == y) {
+        if (touchCoordinates[i] == x && touchCoordinates[i+1] == y) {
           touchCoordinates.splice(i, i + 2);
           return;
         }
@@ -406,7 +360,7 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
       tapping = true;
       tapElement = event.target ? event.target : event.srcElement; // IE uses srcElement.
       // Hack for Safari, which can target text nodes instead of containers.
-      if (tapElement.nodeType == 3) {
+      if(tapElement.nodeType == 3) {
         tapElement = tapElement.parentNode;
       }
 
@@ -415,9 +369,9 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
       startTime = Date.now();
 
       var touches = event.touches && event.touches.length ? event.touches : [event];
-      var e = touches[0].originalEvent || touches[0];
-      touchStartX = e.clientX;
-      touchStartY = e.clientY;
+      var e = touches[0];
+      touchStartX = e.clientX ? e.clientX : e.changedTouches[0].clientX;
+      touchStartY = e.clientY ? e.clientY : e.changedTouches[0].clientY;
     });
 
     element.on('touchmove', function(event) {
@@ -433,20 +387,18 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
 
       var touches = (event.changedTouches && event.changedTouches.length) ? event.changedTouches :
           ((event.touches && event.touches.length) ? event.touches : [event]);
-      var e = touches[0].originalEvent || touches[0];
-      var x = e.clientX;
-      var y = e.clientY;
-      var dist = Math.sqrt(Math.pow(x - touchStartX, 2) + Math.pow(y - touchStartY, 2));
+      var e = touches[0];
+      var x = e.clientX ? e.clientX : e.changedTouches[0].clientX;
+      var y = e.clientY ? e.clientY : e.changedTouches[0].clientY;
+      var dist = Math.sqrt( Math.pow(x - touchStartX, 2) + Math.pow(y - touchStartY, 2) );
 
       if (tapping && diff < TAP_DURATION && dist < MOVE_TOLERANCE) {
         // Call preventGhostClick so the clickbuster will catch the corresponding click.
         preventGhostClick(x, y);
 
-        // Blur the focused element (the button, probably) before firing the callback.
-        // This doesn't work perfectly on Android Chrome, but seems to work elsewhere.
-        // I couldn't get anything to work reliably on Android Chrome.
+        // focus the element that was tapped
         if (tapElement) {
-          tapElement.blur();
+          tapElement.focus();
         }
 
         if (!angular.isDefined(attr.disabled) || attr.disabled === false) {
@@ -488,16 +440,13 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
 
 /**
  * @ngdoc directive
- * @name ngSwipeLeft
+ * @name ngTouch.directive:ngSwipeLeft
  *
  * @description
  * Specify custom behavior when an element is swiped to the left on a touchscreen device.
  * A leftward swipe is a quick, right-to-left slide of the finger.
  * Though ngSwipeLeft is designed for touch-based devices, it will work with a mouse click and drag
  * too.
- *
- * To disable the mouse click and drag functionality, add `ng-swipe-disable-mouse` to
- * the `ng-swipe-left` or `ng-swipe-right` DOM Element.
  *
  * Requires the {@link ngTouch `ngTouch`} module to be installed.
  *
@@ -506,8 +455,8 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
  * upon left swipe. (Event object is available as `$event`)
  *
  * @example
-    <example module="ngSwipeLeftExample" deps="angular-touch.js">
-      <file name="index.html">
+    <doc:example>
+      <doc:source>
         <div ng-show="!showActions" ng-swipe-left="showActions = true">
           Some list content, like an email in the inbox
         </div>
@@ -515,16 +464,13 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
           <button ng-click="reply()">Reply</button>
           <button ng-click="delete()">Delete</button>
         </div>
-      </file>
-      <file name="script.js">
-        angular.module('ngSwipeLeftExample', ['ngTouch']);
-      </file>
-    </example>
+      </doc:source>
+    </doc:example>
  */
 
 /**
  * @ngdoc directive
- * @name ngSwipeRight
+ * @name ngTouch.directive:ngSwipeRight
  *
  * @description
  * Specify custom behavior when an element is swiped to the right on a touchscreen device.
@@ -539,8 +485,8 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
  * upon right swipe. (Event object is available as `$event`)
  *
  * @example
-    <example module="ngSwipeRightExample" deps="angular-touch.js">
-      <file name="index.html">
+    <doc:example>
+      <doc:source>
         <div ng-show="!showActions" ng-swipe-left="showActions = true">
           Some list content, like an email in the inbox
         </div>
@@ -548,11 +494,8 @@ ngTouch.directive('ngClick', ['$parse', '$timeout', '$rootElement',
           <button ng-click="reply()">Reply</button>
           <button ng-click="delete()">Delete</button>
         </div>
-      </file>
-      <file name="script.js">
-        angular.module('ngSwipeRightExample', ['ngTouch']);
-      </file>
-    </example>
+      </doc:source>
+    </doc:example>
  */
 
 function makeSwipeDirective(directiveName, direction, eventName) {
@@ -588,10 +531,6 @@ function makeSwipeDirective(directiveName, direction, eventName) {
             deltaY / deltaX < MAX_VERTICAL_RATIO;
       }
 
-      var pointerTypes = ['touch'];
-      if (!angular.isDefined(attr['ngSwipeDisableMouse'])) {
-        pointerTypes.push('mouse');
-      }
       $swipe.bind(element, {
         'start': function(coords, event) {
           startCoords = coords;
@@ -608,7 +547,7 @@ function makeSwipeDirective(directiveName, direction, eventName) {
             });
           }
         }
-      }, pointerTypes);
+      });
     };
   }]);
 }
